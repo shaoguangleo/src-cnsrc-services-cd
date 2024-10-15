@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xrootd-client
+  namespace: xrootd
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # Avoid RollingUpdate since the startup will be blocked by the volume mount/unmount
+  selector:
+    matchLabels:
+      app: xrootd-client
+  template:
+    metadata:
+      labels:
+        app: xrootd-client
+    spec:
+      securityContext:
+        # Ensure the group ownership is set to GID 1000
+        # This GUID/UID must match in the initContainer script below,
+        # and in the main container's securityContext.
+        fsGroup: 1000
+      initContainers:
+      - name: install-certs
+        image: m.daocloud.io/docker.io/library/rockylinux:9
+        command:
+        - /bin/bash
+        - -c
+        - |
+          # Install Grid certificates. These are not needed for XrdHttp, but populating
+          # /etc/grid-security/certificates seem to be needed for xroot/1094 to operate.
+          yum install -y https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el9-release-latest.rpm
+          yum install -y osg-ca-certs
+          
+        securityContext:
+          # run as privileged for completing the initialisation step above successfully.
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+        - name: grid-certs
+          mountPath: /etc/grid-security/certificates/
+      containers:
+      - name: xrootd
+        image: 192.168.6.173/docker.io/rucio/xrootd:latest
+        command: ["sleep","inf"]
+        securityContext:
+          runAsUser: 0        # Run as non-root user
+          runAsGroup: 1000       # Run as non-root group
+          allowPrivilegeEscalation: false
+        volumeMounts:
+        - name: grid-certs
+          mountPath: /etc/grid-security/certificates/
+          readOnly: true
+        - name: tls-secrets
+          mountPath: /etc/grid-security/tls-secrets/
+      volumes:
+      - name: grid-certs
+        emptyDir: {}
+      - name: tls-secrets
+        secret:
+          secretName: xrootd.shao.ac.cn
+          defaultMode: 256 # 256 decimal = 0400 octal

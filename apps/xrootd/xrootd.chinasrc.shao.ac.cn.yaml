@@ -1,0 +1,25 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: xrootd.chinasrc.shao.ac.cn
+  namespace: xrootd
+spec:
+  dnsNames:
+    - xrootd.chinasrc.shao.ac.cn
+  secretName: xrootd.chinasrc.shao.ac.cn
+  issuerRef:
+    name: letsencrypt-prod #letsencrypt-traefik-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: canfar.shao.ac.cn
+  namespace: xrootd
+spec:
+  dnsNames:
+    - canfar.shao.ac.cn
+  secretName: canfar.shao.ac.cn
+  issuerRef:
+    name: letsencrypt-prod #letsencrypt-traefik-issuer
+    kind: ClusterIssuer
