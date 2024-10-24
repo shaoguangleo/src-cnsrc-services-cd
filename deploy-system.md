@@ -14,3 +14,6 @@ Current the infrastruture of storage, compute and network in cnSRC.
 | worker-6-178   | worker node点 | Physical Machine | centos 7.9 | 192.168.6.178 | 32      | 754      | 557G   |        |        |                          |
 | node179        | standalone | Physical Machine | centos 7.9 | 192.168.6.179 | 32      | 754      | 557G   |        |        |                          |
 | transfer-node | standalone | Physical Machine | centos 7.9 | chinasrc.shao.ac.cn | 88 | 692 | 500G | 256TB |  | public |
+
+Currently, cnSRC supply a 1PB storage for SRCNet v0.1,
+and 2Gbps bandwidth.
