@@ -1,0 +1,101 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: xrootd-http-config
+  namespace: xrootd
+  uid: 25eab417-1333-4f96-ab66-8f5a96adf665
+  resourceVersion: '254400411'
+  creationTimestamp: '2024-09-06T09:10:21Z'
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: >
+      {"apiVersion":"v1","data":{"Authfile":"# Grant access to all directories
+      below '/data/'\ng * /data a\nu * /data
+      lr\n","scitokens.cfg":"[Global]\nonmissing = passthrough\n\n[Issuer ESCAPE
+      IAM]\nissuer =  https://iam-escape.cloud.cnaf.infn.it/\nbase_path =
+      /data\nmap_subject = false\ndefault_user = xrootd\n\n[Issuer
+      SKA-IAM]\nissuer = https://ska-iam.stfc.ac.uk/\nbase_path =
+      /data\nmap_subject = false\ndefault_user =
+      xrootd\n","xrootd-http.cfg":"###########################################################################\n#
+      This is a very simple sample configuration file sufficient to start an 
+      #\n# xrootd data server using the default port 1094 plus http protocol
+      on    #\n# port 80. This server runs by itself (stand-alone) and does not
+      assume   #\n# it is part of a cluster. You can then connect to this server
+      to access  #\n# files in '/tmp'. Consult the the reference manuals on how
+      to create     #\n# more complicated configurations and set the host cert
+      and key for http.
+      #\n#                                                                        
+      #\n# On successful start-up you will see 'initialization completed' in
+      the   #\n# last message. You can now connect to the xrootd
+      server.                
+      #\n#                                                                        
+      #\n# Note: You should always create a *single* configuration file for
+      all    #\n# daemons related to
+      xrootd.                                             
+      #\n###########################################################################\n\n#
+      The export directive indicates which paths are to be exported. While
+      the\n# default is '/tmp', we indicate it anyway to show you this
+      directive.\n#\n#all.export /tmp\nall.export /data\n\n# The adminpath and
+      pidpath variables indicate where the pid and various\n# IPC files should
+      be placed\n#\nall.adminpath /var/spool/xrootd\nall.pidpath
+      /run/xrootd\n\n# Load the http protocol, indicate that it should be served
+      on port 80.\n# The socket bound to port 80 has to be preallocated by the
+      systemd\n# xrdhttp.socket (requires systemd!).\n#\n# In order to enable
+      the xrdhttp.socket run:\n#\tsystemctl enable xrdhttp@http.socket\n# In
+      order to start the xrdhttp.socket run:\n#\tsystemctl start
+      xrdhttp@http.socket\n#\nxrd.protocol XrdHttp:8080 libXrdHttp.so\n# More
+      configuration files can be added in /etc/xrootd/config.d/\n# For example
+      /etc/xrootd/config.d/10-mygrid.cfg and\n#
+      /etc/xrootd/config.d/98-mysite-specifics.cfg\n#\n# Config TLS\nxrd.tls
+      /etc/grid-security/xrd/tls.crt /etc/grid-security/xrd/tls.key\nxrd.tlsca
+      certdir /etc/grid-security/certificates refresh 8h\nxrootd.tls capable all
+      -data\n\n# Config tokens\nxrootd.seclib libXrdSec.so\nsec.level all
+      compatible\n\n# More configuration files can be added in
+      /etc/xrootd/config.d/\n# For example /etc/xrootd/config.d/10-mygrid.cfg
+      and\n# /etc/xrootd/config.d/98-mysite-specifics.cfg\n\n# Authentication
+      and Authorisation part\nofs.authorize 1\nofs.authlib ++
+      libXrdAccSciTokens.so config=/etc/xrootd/scitokens.cfg\nofs.authlib ++
+      libXrdMacaroons.so\nacc.authdb /etc/xrootd/Authfile\nacc.audit
+      deny\nacc.authrefresh 60\n\n# Pass the bearer token to the Xrootd
+      authorization framework.\nhttp.header2cgi Authorization authz\n\n# Only
+      for debugging (comment out after setup is done)\nscitokens.trace
+      all\nofs.trace all\npfc.trace all\nxrd.trace all -sched\npss.setopt
+      DebugLevel 5\n\nall.sitename CHSRC-RSE\n\n# Enable
+      third-party-copy\nhttp.exthandler xrdtpc
+      libXrdHttpTPC.so\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"xrootd-http-config","namespace":"xrootd"}}
+data:
+  Authfile: |-
+    # Grant access to all directories below '/data/'
+    g * /data a
+    u * /data lr
+  checksumscript.sh: |-
+    #!/bin/bash
+
+    CKSLINE=$(/usr/bin/xrdadler32 "$1")
+
+    # Check if the command was successful
+    if [ $? -eq 0 ]; then
+        # Print the value of CKS followed by a new line
+        CKS=$(echo ${CKSLINE} | awk '{print $1}')
+        echo "$CKS"
+        # Exit with return code 0
+        exit 0
+    else
+        # If the command failed, exit with the error code
+        exit 1
+    fi
+  scitokens.cfg: |-
+    [Global]
+    onmissing = passthrough
+
+    [Issuer ESCAPE IAM]
+    issuer =  https://iam-escape.cloud.cnaf.infn.it/
+    base_path = /data
+    map_subject = false
+    default_user = xrootd
+
+    [Issuer SKA-IAM]
+    issuer = https://ska-iam.stfc.ac.uk/
+    base_path = /data
+    map_subject = false
+    default_user = xrootd
+  xrootd-http.cfg: "###########################################################################\n# This is a very simple sample configuration file sufficient to start an  #\n# xrootd data server using the default port 1094 plus http protocol on    #\n# port 80. This server runs by itself (stand-alone) and does not assume   #\n# it is part of a cluster. You can then connect to this server to access  #\n# files in '/tmp'. Consult the the reference manuals on how to create     #\n# more complicated configurations and set the host cert and key for http. #\n#                                                                         #\n# On successful start-up you will see 'initialization completed' in the   #\n# last message. You can now connect to the xrootd server.                 #\n#                                                                         #\n# Note: You should always create a *single* configuration file for all    #\n# daemons related to xrootd.                                              #\n###########################################################################\n\n# The export directive indicates which paths are to be exported. While the\n# default is '/tmp', we indicate it anyway to show you this directive.\n#\n#all.export /tmp\nall.export /data\n\n# The adminpath and pidpath variables indicate where the pid and various\n# IPC files should be placed\n#\nall.adminpath /var/spool/xrootd\nall.pidpath /run/xrootd\n\n# Load the http protocol, indicate that it should be served on port 80.\n# The socket bound to port 80 has to be preallocated by the systemd\n# xrdhttp.socket (requires systemd!).\n#\n# In order to enable the xrdhttp.socket run:\n#\tsystemctl enable xrdhttp@http.socket\n# In order to start the xrdhttp.socket run:\n#\tsystemctl start xrdhttp@http.socket\n#\nxrd.protocol XrdHttp:8080 libXrdHttp.so\n# More configuration files can be added in /etc/xrootd/config.d/\n# For example /etc/xrootd/config.d/10-mygrid.cfg and\n# /etc/xrootd/config.d/98-mysite-specifics.cfg\n#\n# Config TLS\nxrd.tls /etc/grid-security/xrd/tls.crt /etc/grid-security/xrd/tls.key\nxrd.tlsca certdir /etc/grid-security/certificates refresh 8h\nxrootd.tls capable all -data\n\n# Config tokens\nxrootd.seclib libXrdSec.so\nsec.level all compatible\n\n# More configuration files can be added in /etc/xrootd/config.d/\n# For example /etc/xrootd/config.d/10-mygrid.cfg and\n# /etc/xrootd/config.d/98-mysite-specifics.cfg\n\n# Authentication and Authorisation part\nofs.authorize 1\nofs.authlib ++ libXrdAccSciTokens.so config=/etc/xrootd/scitokens.cfg\nofs.authlib ++ libXrdMacaroons.so\nacc.authdb /etc/xrootd/Authfile\nacc.audit deny\nacc.authrefresh 60\n\n# Pass the bearer token to the Xrootd authorization framework.\nhttp.header2cgi Authorization authz\n\n# Only for debugging (comment out after setup is done)\nscitokens.trace all\nofs.trace all\npfc.trace all\nxrd.trace all -sched\npss.setopt DebugLevel 5\n\nall.sitename CHSRC-RSE\n\n# Enable third-party-copy\nhttp.exthandler xrdtpc libXrdHttpTPC.so\n\n\n\n# checksum\nxrootd.chksum max 20 adler32 /etc/xrootd-checksum/checksumscript.sh"

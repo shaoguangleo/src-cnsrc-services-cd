@@ -1,0 +1,234 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: xrootd
+  namespace: xrootd
+  uid: 8b8199be-f640-4d2d-9d5c-d784fd8b513b
+  resourceVersion: '254452587'
+  generation: 27
+  creationTimestamp: '2024-09-06T09:11:49Z'
+  annotations:
+    deployment.kubernetes.io/revision: '27'
+    kubectl.kubernetes.io/last-applied-configuration: >
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"xrootd","namespace":"xrootd"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"xrootd"}},"strategy":{"type":"Recreate"},"template":{"metadata":{"labels":{"app":"xrootd"}},"spec":{"containers":[{"args":["-c","/etc/xrootd/xrootd-http.cfg","-k","fifo","-s","/run/xrootd/xrootd-http.pid","-n","http"],"command":["/usr/bin/xrootd"],"image":"192.168.6.173/docker.io/rucio/xrootd:latest","name":"xrootd","ports":[{"containerPort":8080},{"containerPort":1094}],"securityContext":{"allowPrivilegeEscalation":false,"runAsGroup":1000,"runAsUser":1000},"volumeMounts":[{"mountPath":"/etc/xrootd/","name":"xrootd-http-config"},{"mountPath":"/etc/grid-security/certificates/","name":"grid-certs","readOnly":true},{"mountPath":"/data","name":"xrootd-data"},{"mountPath":"/var/spool/xrootd","name":"spool-dir"},{"mountPath":"/run/xrootd","name":"run-dir"},{"mountPath":"/etc/grid-security/xrd/","name":"tls-certs","readOnly":true}]}],"initContainers":[{"command":["/bin/bash","-c","#
+      Install Grid certificates. These are not needed for XrdHttp, but
+      populating\n# /etc/grid-security/certificates seem to be needed for
+      xroot/1094 to operate.\nyum install -y
+      https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el9-release-latest.rpm\nyum
+      install -y osg-ca-certs\n# Create and set permissions for necessary
+      directories\nmkdir -p /var/spool/xrootd /run/xrootd\nchown -R 1000:1000
+      /var/spool/xrootd /run/xrootd /data\n# Kubernetes always symlinks secrets,
+      and xrootd seems to check the file permissions.\n# Understandably, this
+      results in xrootd checking the permissions of a link.\n# Kubernetes can
+      not handle this scenario, so we have to copy the secrets during\n# the
+      initialisation from the secret volume (tls-secrets) over to a directory
+      (tls-certs).\ncp /etc/grid-security/tls-secrets/tls.crt
+      /etc/grid-security/xrd/tls.crt\ncp /etc/grid-security/tls-secrets/tls.key
+      /etc/grid-security/xrd/tls.key\n\nchmod 600
+      /etc/grid-security/xrd/tls.key\nchown 1000 /etc/grid-security/xrd/tls.key
+      /etc/grid-security/xrd/tls.crt\nls -al
+      /data\n"],"image":"m.daocloud.io/docker.io/library/rockylinux:9","name":"install-certs","securityContext":{"runAsGroup":0,"runAsUser":0},"volumeMounts":[{"mountPath":"/etc/grid-security/certificates/","name":"grid-certs"},{"mountPath":"/data","name":"xrootd-data"},{"mountPath":"/etc/xrootd/","name":"xrootd-http-config"},{"mountPath":"/var/spool/xrootd","name":"spool-dir"},{"mountPath":"/run/xrootd","name":"run-dir"},{"mountPath":"/etc/grid-security/tls-secrets/","name":"tls-secrets"},{"mountPath":"/etc/grid-security/xrd/","name":"tls-certs"}]}],"securityContext":{"fsGroup":1000},"volumes":[{"configMap":{"name":"xrootd-http-config"},"name":"xrootd-http-config"},{"emptyDir":{},"name":"grid-certs"},{"name":"xrootd-data","persistentVolumeClaim":{"claimName":"xrootd-data-pvc"}},{"emptyDir":{},"name":"spool-dir"},{"emptyDir":{},"name":"run-dir"},{"emptyDir":{},"name":"tls-certs"},{"name":"tls-secrets","secret":{"defaultMode":256,"secretName":"canfar.shao.ac.cn"}}]}}}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: xrootd
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: xrootd
+      annotations:
+        image-selectors: '{}'
+        workload.kpanda.io/last-restart-timestamp: '1732603795'
+    spec:
+      volumes:
+        - name: xrootd-http-config
+          configMap:
+            name: xrootd-http-config
+            defaultMode: 420
+        - name: grid-certs
+          emptyDir: {}
+        - name: xrootd-data
+          persistentVolumeClaim:
+            claimName: xrootd-data-pvc
+        - name: spool-dir
+          emptyDir: {}
+        - name: run-dir
+          emptyDir: {}
+        - name: tls-certs
+          emptyDir: {}
+        - name: tls-secrets
+          secret:
+            secretName: canfar.shao.ac.cn
+            defaultMode: 256
+        - name: volume-1732606998124
+          configMap:
+            name: xrootd-checksum
+            defaultMode: 511
+      initContainers:
+        - name: install-certs
+          image: m.daocloud.io/docker.io/library/rockylinux:9
+          command:
+            - /bin/bash
+            - '-c'
+            - >
+              # Install Grid certificates. These are not needed for XrdHttp, but
+              populating
+
+              # /etc/grid-security/certificates seem to be needed for xroot/1094
+              to operate.
+
+              yum install -y
+              https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el9-release-latest.rpm
+
+              yum install -y osg-ca-certs
+
+              # Create and set permissions for necessary directories
+
+              mkdir -p /var/spool/xrootd /run/xrootd
+
+              chown -R 994:994 /var/spool/xrootd /run/xrootd /data
+
+              # Kubernetes always symlinks secrets, and xrootd seems to check
+              the file permissions.
+
+              # Understandably, this results in xrootd checking the permissions
+              of a link.
+
+              # Kubernetes can not handle this scenario, so we have to copy the
+              secrets during
+
+              # the initialisation from the secret volume (tls-secrets) over to
+              a directory (tls-certs).
+
+              cp /etc/grid-security/tls-secrets/tls.crt
+              /etc/grid-security/xrd/tls.crt
+
+              cp /etc/grid-security/tls-secrets/tls.key
+              /etc/grid-security/xrd/tls.key
+
+
+              chmod 600 /etc/grid-security/xrd/tls.key
+
+              chown 994 /etc/grid-security/xrd/tls.key
+              /etc/grid-security/xrd/tls.crt
+
+              ls -al /data
+          resources: {}
+          volumeMounts:
+            - name: grid-certs
+              mountPath: /etc/grid-security/certificates/
+            - name: xrootd-data
+              mountPath: /data
+            - name: xrootd-http-config
+              mountPath: /etc/xrootd/
+            - name: spool-dir
+              mountPath: /var/spool/xrootd
+            - name: run-dir
+              mountPath: /run/xrootd
+            - name: tls-secrets
+              mountPath: /etc/grid-security/tls-secrets/
+            - name: tls-certs
+              mountPath: /etc/grid-security/xrd/
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext:
+            privileged: false
+            runAsUser: 0
+            runAsGroup: 0
+      containers:
+        - name: xrootd
+          image: 192.168.6.173/docker.io/rucio/xrootd:latest
+          command:
+            - /usr/bin/xrootd
+          args:
+            - '-c'
+            - /etc/xrootd/xrootd-http.cfg
+            - '-k'
+            - fifo
+            - '-s'
+            - /run/xrootd/xrootd-http.pid
+            - '-n'
+            - http
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 1094
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - name: xrootd-http-config
+              mountPath: /etc/xrootd/
+            - name: grid-certs
+              readOnly: true
+              mountPath: /etc/grid-security/certificates/
+            - name: xrootd-data
+              mountPath: /data
+            - name: spool-dir
+              mountPath: /var/spool/xrootd
+            - name: run-dir
+              mountPath: /run/xrootd
+            - name: tls-certs
+              readOnly: true
+              mountPath: /etc/grid-security/xrd/
+            - name: volume-1732606998124
+              mountPath: /etc/xrootd-checksum/
+          lifecycle: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+          securityContext:
+            privileged: false
+            runAsUser: 994
+            runAsGroup: 994
+            allowPrivilegeEscalation: false
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext:
+        fsGroup: 994
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - g-master3-6-14
+      schedulerName: default-scheduler
+      tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 300
+        - key: node.kubernetes.io/unreachable
+          operator: Exists
+          effect: NoExecute
+          tolerationSeconds: 300
+      dnsConfig: {}
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+status:
+  observedGeneration: 27
+  replicas: 1
+  updatedReplicas: 1
+  readyReplicas: 1
+  availableReplicas: 1
+  conditions:
+    - type: Available
+      status: 'True'
+      lastUpdateTime: '2024-11-26T07:59:28Z'
+      lastTransitionTime: '2024-11-26T07:59:28Z'
+      reason: MinimumReplicasAvailable
+      message: Deployment has minimum availability.
+    - type: Progressing
+      status: 'True'
+      lastUpdateTime: '2024-11-26T07:59:28Z'
+      lastTransitionTime: '2024-11-26T07:17:05Z'
+      reason: NewReplicaSetAvailable
+      message: ReplicaSet "xrootd-85d77c7d77" has successfully progressed.
