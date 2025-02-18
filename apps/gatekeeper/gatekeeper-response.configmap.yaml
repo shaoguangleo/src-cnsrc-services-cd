@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatekeeper-response-lua-config
+  namespace: gatekeeper
+data:
+  response.lua: |
+    local cjson = require "cjson"
+    
+    local _M = {}
+    
+    -- Function to send a response
+    function _M.send(status, message, http_status_code)
+    local response = {
+    status = status,
+    message = message
+    }
+    
+    ngx.header.content_type = "application/json"
+    local json_response = cjson.encode(response)
+    
+    ngx.status = http_status_code
+    ngx.say(json_response)
+    return ngx.exit(http_status_code)
+    end
+    
+    return _M

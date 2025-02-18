@@ -1,0 +1,99 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatekeeper-permissions-lua-config
+  namespace: gatekeeper
+data:
+  permissions.lua: |
+    local _M = {}
+
+    local cjson = require "cjson"
+    local http = require "resty.http"
+    local response = require "conf.response"
+
+    -- Function to encode query parameters into a query string
+    local function encode_query_params(params)
+        local query_string = ""
+        for k, v in pairs(params) do
+            if query_string == "" then
+                query_string = "?" .. ngx.escape_uri(k) .. "=" .. ngx.escape_uri(v)
+            else
+                query_string = query_string .. "&" .. ngx.escape_uri(k) .. "=" .. ngx.escape_uri(v)
+            end
+        end
+        return query_string
+    end
+
+    -- Function to check authorization against the Permissions API
+    function _M.check_authz(service, request_path, request_method, request_headers, request_params, request_body)
+        local httpc = http.new()
+
+        -- Get the access token from the header
+        local access_token = ""
+        if request_headers then
+            local authorization_header = request_headers["Authorization"] or ""
+
+            -- check if the header starts with "Bearer " and, if so, extract the token
+            local bearer_prefix = "Bearer "
+            if authorization_header:find(bearer_prefix) == 1 then
+                access_token = authorization_header:sub(#bearer_prefix + 1)
+            end
+        end
+
+        -- Get service parameters (node, type, uuid) and form body for permissions request
+        local permissions_request_body = {}
+        if service then
+            permissions_request_body = {
+                service = {
+                  node = service["site_name"] or "",
+                  type = service["type"] or "",
+                  uuid = service["id"] or "",
+                  path = request_path,
+                  method = request_method,
+                  parameters = request_params or {},
+                  body = request_body or {}
+                }
+            }
+        end
+
+        -- Make request against the Permissions API
+        local params = {
+            version = "latest",
+            token = access_token
+        }
+        local url = "{{ .Values.gatekeeper.permissions_api_plugin_authz_endpoint }}" .. service["type"] .. encode_query_params(params)
+        local res, err = httpc:request_uri(url, {
+            method = "POST",
+            headers = {
+                ["Content-Type"] = "application/json"
+            },
+            body = cjson.encode(permissions_request_body),
+            ssl_verify = true
+        })
+
+        -- Process response
+        if not res then
+            local error_message = err and err or "An unknown error occurred"
+            ngx.log(ngx.ERR, "Error contacting external permissions API: ", error_message)
+            response.send("ERROR", "Error contacting external permissions_api: " .. error_message,
+                    ngx.HTTP_INTERNAL_SERVER_ERROR)
+            return false
+        end
+        if res.status == 200 then   -- A 200 is returned for both granted and denied (request is successful)
+            local response_body = cjson.decode(res.body)
+            -- Check the boolean is_authorised for whether permission is granted or denied
+            if response_body.is_authorised then
+                ngx.log(ngx.NOTICE, "Permission granted")
+                return true
+            end
+            ngx.log(ngx.NOTICE, "Permission denied")
+            return false
+        else
+            ngx.log(ngx.ERR, "Error returned from permissions API, server returned code ", res.status)
+            response.send("ERROR", "Error returned from permissions API, server returned code " .. res.status, res.status)
+            return false
+        end
+    end
+
+    return _M

@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatekeeper-mappings-lua-config
+  namespace: gatekeeper
+data:
+  mappings.lua: |
+    -- Path to service mappings
+
+    local _M = {
+        {{- range .Values.gatekeeper.services }}
+        ["{{ .route }}"] = {
+            address = "{{ .address }}",
+            uuid = "{{ .uuid }}"
+        },
+        {{- end }}
+    }
+
+    return _M

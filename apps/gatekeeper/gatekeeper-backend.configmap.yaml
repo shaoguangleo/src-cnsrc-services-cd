@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatekeeper-backend-lua-config
+  namespace: gatekeeper
+data:
+  backend.lua: |
+    local _M = {}
+      local path_to_backend_service_mappings = require "conf.mappings"
+      local response = require "conf.response"
+      -- Function to check if a valid backend service exists for the given request path
+      function _M.get_service(request_path)
+      -- Get the backend service from the path
+      local backend_service_match = nil
+      -- Loop through the mappings and find the first matching prefix
+      for path, service in pairs(path_to_backend_service_mappings) do
+      -- Check if the request_path starts with the service route path
+      if string.sub(request_path, 1, #path) == path then
+      backend_service_match = service
+      break
+      end
+      end
+      if not backend_service_match then
+    local err = "No backend service found for requested path: " .. request_path
+          ngx.log(ngx.ERR, err)
+          response.send("ERROR", err, ngx.HTTP_INTERNAL_SERVER_ERROR)
+      end
+      -- Validate it's configured correctly
+      local backend_service_address = backend_service_match.address
+      local backend_service_uuid = backend_service_match.uuid
+      if not backend_service_address or not backend_service_uuid then
+    local err = "The requested backend is not properly configured for path: " .. request_path
+          ngx.log(ngx.ERR, err)
+          response.send("ERROR", err, ngx.HTTP_INTERNAL_SERVER_ERROR)
+      end
+      return backend_service_match
+      end
+      return _M
