@@ -7,6 +7,9 @@ spec:
     syncOptions:
     - CreateNamespace=true
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: basic-components
   source:
     repoURL: https://kubernetes.github.io/ingress-nginx
     chart: ingress-nginx
@@ -41,6 +44,3 @@ spec:
           enabled: false
           image:
             registry: m.daocloud.io/registry.k8s.io
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: basic-components
