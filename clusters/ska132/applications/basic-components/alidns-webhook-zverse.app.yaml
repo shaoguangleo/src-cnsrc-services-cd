@@ -1,0 +1,28 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alidns-webhook-zverse
+spec:
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: basic-components
+  sources:
+    - repoURL: https://devmachine-fr.github.io/cert-manager-alidns-webhook
+      chart: alidns-webhook
+      targetRevision: 0.6.0
+      helm:
+        releaseName: alidns-webhook-zverse
+        valuesObject:
+          image:
+            repository: ghcr.io/devmachine-fr/cert-manager-alidns-webhook/cert-manager-alidns-webhook
+            tag: 0.2.0
+            pullPolicy: IfNotPresent
+          certManager:
+            namespace: basic-components
+            serviceAccountName: cert-manager
+          groupName: ska.zverse.space
