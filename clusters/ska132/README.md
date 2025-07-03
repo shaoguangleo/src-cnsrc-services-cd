@@ -41,6 +41,9 @@
             --from-literal="secret-key=$YOUR_ACCESS_KEY_SECRET"
           argocd app sync argocd/cert-manager-issuer && argocd app wait argocd/cert-manager-issuer
           ```
+        + ```shell
+          argocd app sync argocd/argo-workflows && argocd app wait argocd/argo-workflows
+          ```
     * with storage class
         + [make storage ready](#storage-dependency)
         + ```shell
