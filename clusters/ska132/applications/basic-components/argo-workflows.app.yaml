@@ -1,0 +1,58 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows
+spec:
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: basic-components
+  sources:
+    - repoURL: https://argoproj.github.io/argo-helm
+      chart: argo-workflows
+      targetRevision: 0.45.2
+      helm:
+        releaseName: argo-workflows
+        valuesObject:
+          crds:
+            install: true
+            keep: false
+          singleNamespace: false
+          controller:
+            image:
+              registry: m.daocloud.io/quay.io
+            workflowNamespaces:
+              - business-workflows
+          executor:
+            image:
+              registry: m.daocloud.io/quay.io
+          workflow:
+            serviceAccount:
+              create: true
+            rbac:
+              create: true
+          server:
+            image:
+              registry: m.daocloud.io/quay.io
+            authModes:
+              - server
+            ingress:
+              enabled: ture
+              ingressClassName: "nginx"
+              annotations:
+                cert-manager.io/cluster-issuer: alidns-webhook-zverse-letsencrypt
+                nginx.ingress.kubernetes.io/rewrite-target: /$1
+              hosts:
+                - argo-workflows.internal.ska.zverse.space
+              paths:
+                - /?(.*)
+              tls:
+                - secretName: argo-workflows.internal.ska.zverse.space-tls
+                  hosts:
+                    - argo-workflows.internal.ska.zverse.space
+            sso:
+              enabled: false
