@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: container-image-mirror
+spec:
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: basic-components
+  sources:
+    - repoURL: https://helm.twun.io
+      chart: docker-registry
+      targetRevision: 2.2.3
+      helm:
+        releaseName: container-image-mirror
+        valuesObject:
+          image:
+            repository: m.daocloud.io/docker.io/library/registry
+          persistence:
+            enabled: true
+            storageClass: nfs-external-nas
+            size: 300Gi
+          proxy:
+            enabled: true
+            remoteurl: http://8.210.195.11:8080
+          ingress:
+            enabled: true
+            className: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: alidns-webhook-zverse-letsencrypt
+              nginx.ingress.kubernetes.io/proxy-body-size: "1024m"
+            hosts:
+              - container-image-mirror.internal.ska.zverse.space
+            tls:
+              - secretName: container-image-mirror.internal.ska.zverse.space-tls
+                hosts:
+                  - container-image-mirror.internal.ska.zverse.space
