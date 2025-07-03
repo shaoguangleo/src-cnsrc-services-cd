@@ -56,4 +56,3 @@
           argocd app sync argocd/nfs-provisioner && argocd app wait argocd/nfs-provisioner
           ```
         
-
