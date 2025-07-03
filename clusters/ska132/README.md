@@ -46,6 +46,12 @@
         + ```shell
           argocd app sync argocd/chart-museum && argocd app wait argocd/chart-museum
           ```
+        + ```shell
+          argocd app sync argocd/container-image-mirror && argocd app wait argocd/container-image-mirror
+          ```
+        + ```shell
+          argocd app sync argocd/container-registry && argocd app wait argocd/container-registry
+          ```
 4. sync and wait for `storage` to be ready
     * sub module entrance
         + ```shell
