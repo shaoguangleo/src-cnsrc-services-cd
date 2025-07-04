@@ -19,8 +19,6 @@ spec:
       helm:
         releaseName: kube-prometheus-stack
         valuesObject:
-          global:
-            imageRegistry: m.daocloud.io/quay.io
           crds:
             enabled: true
           alertmanager:
@@ -55,6 +53,8 @@ spec:
               registry: m.daocloud.io/quay.io
           grafana:
             enabled: true
+            image:
+              registry: m.daocloud.io/docker.io
             admin:
               existingSecret: "kube-prometheus-grafana-credentials"
               userKey: admin-user
@@ -70,6 +70,21 @@ spec:
                 - secretName: grafana.ska.zverse.space-tls
                   hosts:
                   - grafana.ska.zverse.space
+            testFramework:
+              image:
+                registry: m.daocloud.io/docker.io
+            downloadDashboardsImage:
+              registry: m.daocloud.io/docker.io
+            initChownData:
+              image:
+                registry: m.daocloud.io/docker.io
+            sidecar:
+              image:
+                registry: m.daocloud.io/quay.io
+            imageRenderer:
+              enabled: false
+              image:
+                registry: m.daocloud.io/docker.io
           thanosRuler:
             enabled: false
             thanosRulerSpec:
@@ -89,3 +104,9 @@ spec:
                     resources:
                       requests:
                         storage: 100Gi
+          kube-state-metrics:
+            image:
+              registry: m.daocloud.io/registry.k8s.io
+            kubeRBACProxy:
+              image:
+                registry: m.daocloud.io/quay.io
