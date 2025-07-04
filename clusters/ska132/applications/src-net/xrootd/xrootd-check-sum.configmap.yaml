@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: xrootd-checksum-config
+  namespace: xrootd
+data:
+  checksumscript.sh: |-
+    #!/bin/bash
+
+    CKSLINE=$(/usr/bin/xrdadler32 "$1")
+
+    # Check if the command was successful
+    if [ $? -eq 0 ]; then
+        # Print the value of CKS followed by a new line
+        CKS=$(echo ${CKSLINE} | awk '{print $1}')
+        echo "$CKS"
+        # Exit with return code 0
+        exit 0
+    else
+        # If the command failed, exit with the error code
+        exit 1
+    fi

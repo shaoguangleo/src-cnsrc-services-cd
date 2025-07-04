@@ -81,3 +81,12 @@
         + ```shell
           argocd app sync argocd/prometheus-push-gateway && argocd app wait argocd/prometheus-push-gateway
           ```
+6. sync and wait for `src-net` to be ready
+    * sub module entrance
+        + ```shell
+          argocd app sync argocd/src-net && argocd app wait argocd/src-net
+          ```
+    * sub module sync
+        + ```shell
+          argocd app sync argocd/xrootd && argocd app wait argocd/xrootd
+          ```
