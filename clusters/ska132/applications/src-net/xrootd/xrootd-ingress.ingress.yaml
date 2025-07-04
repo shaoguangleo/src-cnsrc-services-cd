@@ -1,0 +1,30 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: alidns-webhook-zverse-letsencrypt
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 20g
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+  name: xrootd-ingress
+  namespace: xrootd
+spec:
+  rules:
+    - host: xrootd.ska.zverse.space
+      http:
+        paths:
+          - backend:
+              service:
+                name: xrootd-svc
+                port:
+                  name: http
+            path: /?(.*)
+            pathType: ImplementationSpecific
+  tls:
+    - hosts:
+        - xrootd.ska.zverse.space
+      secretName: xrootd.ska.zverse.space-tls

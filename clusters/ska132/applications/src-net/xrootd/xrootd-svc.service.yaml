@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xrootd-svc
+  namespace: xrootd
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: root
+      protocol: TCP
+      port: 1094
+      targetPort: 1094
+  selector:
+    app.kubernetes.io/name: xrootd-server
+  type: ClusterIP

@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xrootd-client
+  namespace: xrootd
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: xrootd-client
+  template:
+    metadata:
+      labels:
+        app: xrootd-client
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: install-certs
+          image: container-image-mirror.internal.ska.zverse.space:32443/docker.io/library/rockylinux:9.3.20231119
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Install Grid certificates. These are not needed for XrdHttp, but populating
+              # /etc/grid-security/certificates seem to be needed for xroot/1094 to operate.
+              yum install -y https://repo.opensciencegrid.org/osg/3.6/osg-3.6-el9-release-latest.rpm
+              yum install -y osg-ca-certs
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          volumeMounts:
+            - name: grid-certs
+              mountPath: /etc/grid-security/certificates/
+      containers:
+        - name: xrootd
+          image: container-image-mirror.internal.ska.zverse.space:32443/docker.io/rucio/xrootd:36.2.0
+          command: ["sleep","inf"]
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: grid-certs
+              mountPath: /etc/grid-security/certificates/
+              readOnly: true
+            - name: tls-secrets
+              mountPath: /etc/grid-security/tls-secrets/
+      volumes:
+        - name: grid-certs
+          emptyDir: {}
+        - name: tls-secrets
+          secret:
+            secretName: xrootd.ska.zverse.space-tls
