@@ -72,6 +72,7 @@
           ```
     * sub module sync
         + ```shell
+          kubectl get namespace monitor > /dev/null 2>&1 || kubectl create namespace monitor
           kubectl -n monitor create secret generic kube-prometheus-grafana-credentials \
             --from-literal="admin-user=admin" \
             --from-literal="admin-password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)"
