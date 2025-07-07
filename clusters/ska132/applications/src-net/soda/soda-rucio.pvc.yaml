@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: soda-rucio-pvc
+  namespace: soda
+  annotations:
+    argocd.argoproj.io/sync-phase: PreSync 
+    argocd.argoproj.io/sync-wave: "-1"    
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: nfs-external-nas
+  selector:
+    matchLabels:
+      storage: soda-rucio-storage
