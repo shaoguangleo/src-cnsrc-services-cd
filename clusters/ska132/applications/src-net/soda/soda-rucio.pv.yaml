@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: soda-rucio-pv
+  annotations:
+    argocd.argoproj.io/sync-phase: PreSync 
+    argocd.argoproj.io/sync-wave: "-1"    
+  labels:
+    storage: soda-rucio-storage  
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-external-nas
+  nfs:
+    server: 192.168.6.66
+    path: /share/cnSRC/ska132/application/xrootd/
