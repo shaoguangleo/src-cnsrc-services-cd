@@ -1,0 +1,77 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: src-net-gatekeeper
+spec:
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gatekeeper
+  sources:
+    - repoURL: https://chart-museum.internal.ska.zverse.space:32443
+      chart: ska-src-dm-da-service-gatekeeper
+      targetRevision: 0.2.4
+      helm:
+        releaseName: src-net-gatekeeper
+        valuesObject:
+          ingress-nginx:
+            controller:
+              image:
+                registry: m.daocloud.io/registry.k8s.io
+              service:
+                type: NodePort
+              ingressClass: gatekeeper-nginx
+              admissionWebhooks:
+                patch:
+                  image:
+                    registry: m.daocloud.io/registry.k8s.io
+            podAnnotations:
+              checksum/templates: 3840126d
+          echo:
+            image:
+              registry: harbor.srcnet.skao.int/ska-src-dm-da-service-gatekeeper
+          gatekeeper:
+            cache:
+              ttl: 3600
+            siteCapabilities:
+              tokenEndpoint: https://ska-iam.stfc.ac.uk/token
+              getServiceEndpoint: https://site-capabilities.srcnet.skao.int/api/v1/services/
+              clientScopes: site-capabilities-api-service
+              existingSecret: true
+            ingress:
+              annotations:
+                cert-manager.io/cluster-issuer: alidns-webhook-zverse-letsencrypt
+            services:
+              - route: "/echo"
+                namespace: service-gatekeeper-echo
+                prefix: "https://"
+                service_name: ska-src-dm-da-service-gatekeeper-echo
+                ingress_host: gatekeeper.ska.zverse.space
+                port: 8080
+                uuid: 1f73c95e-301b-4f5e-a2cf-aeb461da2d70
+                tls:
+                  host: gatekeeper.ska.zverse.space
+                  secret_name: gatekeeper.ska.zverse.space-tls
+              - route: "/soda"
+                namespace: soda
+                prefix: "http://"
+                service_name: ska-src-soda
+                ingress_host: gatekeeper.ska.zverse.space
+                port: 8080
+                uuid: 45c422b9-51ca-46af-9490-b99c4165b6d4
+                tls:
+                  host: gatekeeper.ska.zverse.space
+                  secret_name: gatekeeper.ska.zverse.space-tls
+              - route: "/preparedata"
+                namespace: preparedata
+                service_name: preparedata-service
+                ingress_host: gatekeeper.ska.zverse.space
+                port: 8000
+                uuid: 34838cc5-f7e4-4dd9-91e1-5e152ab6e8d0
+                tls:
+                  host: gatekeeper.ska.zverse.space
+                  secret_name: gatekeeper.ska.zverse.space-tls
