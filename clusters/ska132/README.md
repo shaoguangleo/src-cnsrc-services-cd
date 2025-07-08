@@ -98,11 +98,17 @@
           argocd app sync argocd/src-net-soda && argocd app wait argocd/src-net-soda
           ```
         + ```shell
+          kubectl get namespace gatekeeper > /dev/null 2>&1 || kubectl create namespace gatekeeper
+          #export GATEKEEPER_CLIENT_ID=your_gatekeeper_client_id
+          #export GATEKEEPER_CLIENT_SECRET=your_gatekeeper_client_secret
+          kubectl -n gatekeeper create secret generic client-credentials \
+            --from-literal="client_id=$GATEKEEPER_CLIENT_ID" \
+            --from-literal="client_secret=$GATEKEEPER_CLIENT_SECRET"
           argocd app sync argocd/src-net-gatekeeper && argocd app wait argocd/src-net-gatekeeper
           ```
         + ```shell
           #export JUPYTERHUB_CLIENT_ID=your_jupyterhub_client_id
           #export JUPYTERHUB_CLIENT_SECRET=your_jupyterhub_client_secret
-          kubectl -n argocd patch application src-net-jupyterhub --type merge --patch '{"spec":{"sources":[{"helm":{"valuesObject":{"hub":{"config":{"GenericOAuthenticator":{"client_id":"'"$JUPYTERHUB_CLIENT_ID"'","client_secret":"'"$JUPYTERHUB_CLIENT_SECRET"'"}}}}}}]}}}'
+          kubectl -n argocd patch application src-net-jupyterhub --type merge --patch '{"spec":{"sources":[{"helm":{"valuesObject":{"hub":{"config":{"GenericOAuthenticator":{"client_id":"'"$JUPYTERHUB_CLIENT_ID"'","client_secret":"'"$JUPYTERHUB_CLIENT_SECRET"'"}}}}}}]}}'
           argocd app sync argocd/src-net-jupyterhub && argocd app wait argocd/src-net-jupyterhub
           ```
