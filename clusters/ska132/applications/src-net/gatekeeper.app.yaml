@@ -14,7 +14,7 @@ spec:
   sources:
     - repoURL: https://chart-museum.internal.ska.zverse.space:32443
       chart: ska-src-dm-da-service-gatekeeper
-      targetRevision: 0.2.4
+      targetRevision: 0.2.7
       helm:
         releaseName: src-net-gatekeeper
         valuesObject:
