@@ -9,80 +9,48 @@ spec:
       - CreateNamespace=true
   project: default
   source:
-    repoURL: https://chart-museum.internal.ska.zverse.space:32443
-    chart: src-net-preparedata
-    targetRevision: 0.1.0
+    repoURL: https://artefact.skao.int/repository/helm-internal/
+    chart: ska-src-dm-local-data-preparer
+    targetRevision: 0.3.6
     helm:
       releaseName: src-net-preparedata
       valuesObject:
-        persistentVolumeClaim:
-          userspace:
-            mountPath: /share/cnSRC/ska132/application/srcnet/userdata/cavern/home
-            nfs:
-              server: 192.168.6.66
-          rse:  
-            mountPath: /share/cnSRC/ska132/application/xrootd/
-            nfs:
-              server: 192.168.6.66
-        core:
-          approach: copy_to_user_area
+        localPreparerCore:
           image:
-            registry: container-registry.internal.ska.zverse.space:32443/perparedata
-            name: preparedata-core
-            tag: copy_method
+            registry: artefact.skao.int
+            image: dpapi-core
+            tag: 0.3.6
             pullPolicy: Always
-          service:
-            type: ClusterIP
-            port: 8000
-          deployment:
-            replicas: 1
-            resources:
-              limits:
-                cpu: "1000m"
-                memory: "2048Mi"
-              requests:
-                cpu: "500m"
-                memory: "1024Mi"
-        celery:
+        celeryWorker:
           image:
-            registry: container-registry.internal.ska.zverse.space:32443/perparedata
-            name: celery-worker
-            tag: copy_method
+            registry: artefact.skao.int
+            image: dpapi-celery
+            tag: 0.3.6
             pullPolicy: Always
-          persistent:
-            mountPath: /tmp/celery
-          deployment:
-            replicas: 1
-            resources:
-              limits:
-                cpu: "1000m"
-                memory: "4096Mi"
-              requests:
-                cpu: "500m"
-                memory: "2048Mi"
-        rabbitmq:
-          authentication:
-            user: user
-            password: user
-          image:
-            registry: m.daocloud.io/docker.io/library
-            name: rabbitmq
-            tag: 3-management
-            pullPolicy: Always
-          service:
-            name: rabbitmq-service
-            type: ClusterIP
-            port: 5672
-            managementPort: 15672
-          deployment:
-            replicas: 1
-            resources:
-              limits:
-                cpu: "1000m"
-                memory: "1024Mi"
-              requests:
-                cpu: "500m"
-                memory: "512Mi"
+        service:
+          type: NodePort
+          port: 8000
+        rabbitmqService:
+          type: ClusterIP
+          port: 5672
+          managementPort: 15672
+        # Only used for the cavern approach, secret name should be `cavern-api-key`.
+        #secrets:
+        #  cavern:
+        #    existingSecret: true
+        env:
+          ABS_PATH_USER_AREA_ROOT: /users/cavern/home
+          ABS_PATH_RSE_ROOT: /rse
+          ABS_PATH_CELERY_RESULTS: /var/celery/results
+          SUPPORTED_APPROACHES: copy
+          DEFAULT_APPROACH: copy
+        pvc:
+          rse: "xrootd-preparedata-static-pvc"
+          rsePath: "/rse"
+          cavern: "skaha-preparedata-static-pvc"
+          cavernPath: "/users"
+          celeryCache: "preparedata-celery-cache-pvc"
+          celeryCachePath: "/var/celery/results"
   destination:
     server: https://kubernetes.default.svc
     namespace: preparedata
